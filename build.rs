@@ -2,8 +2,9 @@ extern crate autotools;
 extern crate bindgen;
 extern crate fs_extra;
 
-use std::env;
+use std::{env, fs};
 use std::path::PathBuf;
+use std::process::Command;
 
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -47,19 +48,57 @@ fn main() {
 
         dst.disable("documentation", None)
             .disable("tests", None)
+            .disable("minidebuginfo", None)
+            .disable("coredump", None)
+            .disable("setjmp", None)
+            .enable("zlibdebuginfo", None)
             .disable_shared()
             .enable_static();
 
         let dst = dst.build();
-        println!("cargo:rustc-link-search={}/lib", dst.display());
+        let library_path = format!("{}/lib", dst.display());
+        println!("cargo:rustc-link-search={}", library_path);
+
+        Command::new("ar")
+            .args(["x", &format!("libunwind-{}.a", link_lib_arch)])
+            .current_dir(&library_path)
+            .output().expect("failed to extract libunwind-ARCH.a");
+
+        Command::new("ar")
+            .args(["x", "libunwind.a"])
+            .current_dir(&library_path)
+            .output().expect("failed to extract libunwind.a");
+        
+        let mut ar_args = vec!["cr".to_owned(), "libunwind-all.a".to_owned()];
+        fs::read_dir(&library_path).expect("failed to read libunwind directory")
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().unwrap().is_file())
+            .filter(|e| e.file_name().to_str().unwrap().ends_with(".o"))
+            .for_each(|e| ar_args.push(e.file_name().to_str().unwrap().to_owned()));
+
+        Command::new("ar")
+            .args(ar_args)
+            .current_dir(&library_path)
+            .output().expect("failed to extract libunwind.a");
+
+        println!("cargo:rustc-link-lib=static=unwind-all");
+
+        #[cfg(feature = "ptrace")]
+        {
+            panic!("static link with ptrace feature is not supported")
+        }
     }
 
-    println!("cargo:rustc-link-lib=unwind-{}", link_lib_arch);
-    println!("cargo:rustc-link-lib=unwind");
-    println!("cargo:rustc-link-lib=unwind-coredump");
-    #[cfg(feature = "ptrace")]
-    {
-        println!("cargo:rustc-link-lib=unwind-ptrace");
+    cfg_if::cfg_if! {
+        if #[cfg(not(feature = "static"))] {
+            println!("cargo:rustc-link-lib=unwind-{}", link_lib_arch);
+            println!("cargo:rustc-link-lib=unwind");
+
+            #[cfg(feature = "ptrace")]
+            {
+                println!("cargo:rustc-link-lib=unwind-ptrace");
+            }
+        }
     }
 
     let bindings = bindgen::Builder::default();
@@ -69,7 +108,6 @@ fn main() {
         _ => bindings.blocklist_function("_Ux86_64_.*"),
     };
     let bindings = bindings.header("libunwind/include/libunwind.h");
-    let bindings = bindings.header("libunwind/include/libunwind-coredump.h");
 
     #[cfg(feature = "ptrace")]
     let bindings = {

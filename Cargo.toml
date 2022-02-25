@@ -14,11 +14,11 @@ license = "MIT"
 
 [features]
 ptrace = []
-dynamic = []
 static = []
 
 [dependencies]
 libc = "0.2"
+libz-sys = "1.1"
 
 [build-dependencies]
 bindgen = "0.59"

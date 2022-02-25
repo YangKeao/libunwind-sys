@@ -29,6 +29,13 @@ extern "C" {
         arg2: *mut unw_context_t,
     ) -> ::std::os::raw::c_int;
 
+    #[link_name = "_Ux86_64_init_local2"]
+    pub fn unw_init_local2(
+        arg1: *mut unw_cursor_t,
+        arg2: *mut unw_context_t,
+        arg3: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+
     #[link_name = "_Ux86_64_init_remote"]
     pub fn unw_init_remote(
         arg1: *mut unw_cursor_t,

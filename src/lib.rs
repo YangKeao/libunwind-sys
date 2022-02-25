@@ -42,6 +42,7 @@ mod tests {
             let mut c = MaybeUninit::uninit();
             let mut uc = MaybeUninit::uninit();
             let mut ip: unw_word_t = 0;
+            let _ret = unw_getcontext(uc.as_mut_ptr());
             let _ret = unw_init_local(c.as_mut_ptr(), uc.as_mut_ptr());
             let mut backtrace = String::new();
             loop {

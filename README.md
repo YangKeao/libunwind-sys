@@ -1,27 +1,19 @@
-[![crates.io](https://img.shields.io/crates/v/libunwind-sys.svg)](https://crates.io/crates/libunwind-sys)
-# libunwind-sys
+[![crates.io](https://img.shields.io/crates/v/another-libunwind-sys.svg)](https://crates.io/crates/another-libunwind-sys)
+# another-libunwind-sys
 
-This Rust crate provides low-level bindings for the [libunwind] library.
+This library compiles the libunwind statically, and only local unwind is supported.
 
 Supported targets:
 * x86_64-unknown-linux-gnu;
 * i686-unknown-linux-gnu;
-* i586-unknown-linux-gnu;
-* arm-unknown-linux-gnueabihf;
-* x86_64-unknown-linux-musl.
 
 Tests are provided only for x86_64-unknown-linux-gnu target.
 
-[libunwind]: https://www.nongnu.org/libunwind/
+## Roadmap
 
-## Installation
+- [ ] Support aarch64
+- [ ] Support remote unwind
 
-First, compile `libunwind` as a shared library and install it. Add this crate to your `Cargo.toml`:
-
-```toml
-[dependencies]
-libunwind-sys = "0.5.1"
-```
 ## License
 
 This crate is licensed under the [MIT license].

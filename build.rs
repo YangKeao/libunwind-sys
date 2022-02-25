@@ -2,9 +2,8 @@ extern crate autotools;
 extern crate bindgen;
 extern crate fs_extra;
 
-use std::{env, fs};
 use std::path::PathBuf;
-use std::process::Command;
+use std::env;
 
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -21,7 +20,7 @@ fn main() {
     let link_lib_arch = match target.as_str() {
         "x86_64-unknown-linux-gnu" | "x86_64-unknown-linux-musl" => "x86_64",
         "i686-unknown-linux-gnu" | "i586-unknown-linux-gnu" => "x86",
-        "arm-unknown-linux-gnueabihf" => "arm",
+        "aarch64-unknown-linux-gnu" => "aarch64",
         _ => "",
     };
     if link_lib_arch.is_empty() {
@@ -33,6 +32,9 @@ fn main() {
     #[cfg(feature = "static")]
     {
         use autotools::Config;
+
+        use std::process::Command;
+        use std::fs;
 
         // Build libunwind.
         // Configure. Check if we compile for  x86 target on x86_64 host.
@@ -62,16 +64,21 @@ fn main() {
         Command::new("ar")
             .args(["x", &format!("libunwind-{}.a", link_lib_arch)])
             .current_dir(&library_path)
-            .output().expect("failed to extract libunwind-ARCH.a");
+            .output()
+            .expect("failed to extract libunwind-ARCH.a");
 
         Command::new("ar")
             .args(["x", "libunwind.a"])
             .current_dir(&library_path)
-            .output().expect("failed to extract libunwind.a");
-        
+            .output()
+            .expect("failed to extract libunwind.a");
+
         let mut ar_args = vec!["cr".to_owned(), "libunwind-all.a".to_owned()];
-        fs::read_dir(&library_path).expect("failed to read libunwind directory")
+        let static_link_blocklist = ["Gget_accessors.o"];
+        fs::read_dir(&library_path)
+            .expect("failed to read libunwind directory")
             .filter_map(|e| e.ok())
+            .filter(|e| !static_link_blocklist.contains(&e.file_name().to_str().unwrap()))
             .filter(|e| e.file_type().unwrap().is_file())
             .filter(|e| e.file_name().to_str().unwrap().ends_with(".o"))
             .for_each(|e| ar_args.push(e.file_name().to_str().unwrap().to_owned()));
@@ -79,7 +86,8 @@ fn main() {
         Command::new("ar")
             .args(ar_args)
             .current_dir(&library_path)
-            .output().expect("failed to extract libunwind.a");
+            .output()
+            .expect("failed to create libunwind-all.a");
 
         println!("cargo:rustc-link-lib=static=unwind-all");
 
@@ -110,9 +118,7 @@ fn main() {
     let bindings = bindings.header("libunwind/include/libunwind.h");
 
     #[cfg(feature = "ptrace")]
-    let bindings = {
-       bindings.header("libunwind/include/libunwind-ptrace.h")
-    };
+    let bindings = { bindings.header("libunwind/include/libunwind-ptrace.h") };
 
     let bindings = bindings.generate().expect("Unable to generate bindings");
     bindings

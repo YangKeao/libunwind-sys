@@ -1,6 +1,6 @@
 [package]
 name = "another-libunwind-sys"
-version = "0.5.1"
+version = "0.6.0"
 authors = [ "Andrey Fedotov  <fedotoff@ispras.ru>", "Keao Yang <yangkeao@chunibyo.icu>" ]
 edition = "2018"
 build = "build.rs"
@@ -9,7 +9,7 @@ description = "Low-level bindings for the libunwind library"
 readme = "README.md"
 keywords = [ "ffi", "backtrace","stacktrace","coredump"]
 repository = "https://github.com/YangKeao/libunwind-sys.git"
-homepage = "https://github.com/xcoldhandsx/libunwind-sys.git"
+homepage = "https://github.com/YangKeao/libunwind-sys.git"
 license = "MIT"
 
 [features]

@@ -8,9 +8,9 @@ use crate::*;
 use libc::c_int;
 
 //Registrers
-pub const UNW_TDEP_IP: arm_regnum_t = 14;
-pub const UNW_TDEP_SP: arm_regnum_t = 13;
-pub const UNW_TDEP_EH: arm_regnum_t = 0;
+pub const UNW_TDEP_IP: unw_regnum_t = 14;
+pub const UNW_TDEP_SP: unw_regnum_t = 13;
+pub const UNW_TDEP_EH: unw_regnum_t = 0;
 
 //functions
 extern "C" {
@@ -33,7 +33,7 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 
     #[link_name = "_Uarm_init_local2"]
-    pub fn unw_init_local(
+    pub fn unw_init_local2(
         arg1: *mut unw_cursor_t,
         arg2: *mut unw_context_t,
         arg3: ::std::os::raw::c_int,

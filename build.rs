@@ -115,7 +115,7 @@ fn main() {
         "arm" => bindings.blocklist_function("_Uarm_.*"),
         _ => bindings.blocklist_function("_Ux86_64_.*"),
     };
-    let bindings = bindings.header("libunwind/include/libunwind.h");
+    let bindings = bindings.header(out_dir.join("include/libunwind.h").into_os_string().into_string().unwrap());
 
     #[cfg(feature = "ptrace")]
     let bindings = { bindings.header("libunwind/include/libunwind-ptrace.h") };
